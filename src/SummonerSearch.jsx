@@ -70,7 +70,7 @@ const SummonerSearch = () => {
 
   return (
     <div className="p-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-2">Summoner Lookup</h1>
+      <h1 className="text-xl font-bold mb-2">LOL.GG</h1>
       <div className="flex gap-2 mb-2">
         <select
           value={region}
