@@ -68,7 +68,7 @@ const SummonerProfile = () => {
       const flexQueue = rankedDataArray.find(entry => entry.queueType === "RANKED_FLEX_SR");
 
       const matchRes = await fetch(
-        `https://${routing}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=10`,
+        `https://${routing}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=5`,
         { headers: { "X-Riot-Token": API_KEY } }
       );
       if (!matchRes.ok) throw new Error("Failed to fetch match IDs");
@@ -186,10 +186,21 @@ const SummonerProfile = () => {
               cs: p.totalMinionsKilled + p.neutralMinionsKilled,
               goldEarned: (p.goldEarned / 1000).toFixed(1) + "K",
               tier: playerRankMap[p.summonerId]?.tier || "Unranked",
-              rank: playerRankMap[p.summonerId]?.rank || ""
+              rank: playerRankMap[p.summonerId]?.rank || "",
+              summoner1Id: p.summoner1Id,
+              summoner2Id: p.summoner2Id,
+              primaryRuneId: p.perks?.styles?.[0]?.selections?.[0]?.perk,
+              subStyleId: p.perks?.styles?.[1]?.style,
+              item0: p.item0,
+              item1: p.item1,
+              item2: p.item2,
+              item3: p.item3,
+              item4: p.item4,
+              item5: p.item5,
+              item6: p.item6
             })),
           opposingTeam: match.info.participants
-            .filter(p => p.teamId === player.teamId)
+            .filter(p => p.teamId !== player.teamId)
             .map(p => ({
               summonerName: p.riotIdGameName + "#" + p.riotIdTagline,
               championName: p.championName,
@@ -199,7 +210,18 @@ const SummonerProfile = () => {
               cs: p.totalMinionsKilled + p.neutralMinionsKilled,
               goldEarned: (p.goldEarned / 1000).toFixed(1) + "K",
               tier: playerRankMap[p.summonerId]?.tier || "Unranked",
-              rank: playerRankMap[p.summonerId]?.rank || ""
+              rank: playerRankMap[p.summonerId]?.rank || "",
+              summoner1Id: p.summoner1Id,
+              summoner2Id: p.summoner2Id,
+              primaryRuneId: p.perks?.styles?.[0]?.selections?.[0]?.perk,
+              subStyleId: p.perks?.styles?.[1]?.style,
+              item0: p.item0,
+              item1: p.item1,
+              item2: p.item2,
+              item3: p.item3,
+              item4: p.item4,
+              item5: p.item5,
+              item6: p.item6
             }))
         };
       });
@@ -530,13 +552,13 @@ const SummonerProfile = () => {
                             <img
                               src={
                                 match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.primaryRuneId}.png`
-                                  : "/api/placeholder/36/36"
+                                  : ""
                               }
                               width="36"
                               alt={`${match.primaryRuneId}`}
                             /><br />
                             <img 
-                              src={match.subStyleId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.subStyleId}.png` : "/api/placeholder/36/36"}
+                              src={match.subStyleId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.subStyleId}.png` : ""}
                               width="36" 
                               className="p-1"
                               alt={`${match.subStyleId}`}
@@ -556,7 +578,7 @@ const SummonerProfile = () => {
                                         alt={`Item ${idx}`}
                                       />
                                     ) : (
-                                      <div className="img-fluid" style={{ width: "34px", height: "34px", backgroundColor: "#000" }}></div>
+                                      <div className="img-fluid" style={{ width: "35px", height: "35px", backgroundColor: "#000" }}></div>
                                     )}
                                   </div>
                                 ))}
@@ -598,19 +620,49 @@ const SummonerProfile = () => {
                                   />
                                 </td>
                                 <td>
-                                  <img src="/api/placeholder/25/25" width="25" alt="Summoner Spell" /><br />
-                                  <img src="/api/placeholder/25/25" width="25" alt="Summoner Spell" />
+                                  <img src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(match.summoner1Id)}.png`} width="25" alt={`${player.summoner1Id}`} /><br />
+                                  <img src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(match.summoner2Id)}.png`} width="25" alt={`${player.summoner2Id}`} />
                                 </td>
                                 <td>
-                                  <img src="/api/placeholder/24/24" width="24" alt="Rune" /><br />
-                                  <img src="/api/placeholder/20/20" width="20" alt="Rune" />
+                                  <img
+                                    src={
+                                      match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.primaryRuneId}.png`
+                                        : ""
+                                    }
+                                    width="25"
+                                    alt={`${player.primaryRuneId}`}
+                                  /><br />
+                                  <img
+                                    src={
+                                      match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.subStyleId}.png`
+                                        : ""
+                                    }
+                                    width="25"
+                                    alt={`${player.subStyleId}`}
+                                  />
                                 </td>
                                 <td>
-                                  <div className="mx-1 d-none d-md-block" style={{ maxWidth: "120px" }}>
-                                    <div className="row row-cols-4 gx-1 gy-1">
-                                      {Array(7).fill(0).map((_, i) => (
+                                  <div className="mx-1 d-none d-md-block" style={{ maxWidth: "300px" }}>
+                                    <div className="row row-cols-4 gx-1 gy-0">
+                                      {[player.item0, player.item1, player.item2, player.item6, player.item3, player.item4, player.item5].map((itemId, i) => (
                                         <div className="col" key={i}>
-                                          <img src="/api/placeholder/25/25" className="img-fluid" width="25" alt="Item" />
+                                          {itemId > 0 ? (
+                                            <img
+                                              src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/item/${itemId}.png`}
+                                              className="img-fluid"
+                                              width="30"
+                                              alt={`Item ${i}`}
+                                            />
+                                          ) : (
+                                            <div
+                                              className="img-fluid"
+                                              style={{
+                                                width: "25px",
+                                                height: "25px",
+                                                backgroundColor: "#000",
+                                              }}
+                                            ></div>
+                                          )}
                                         </div>
                                       ))}
                                     </div>
@@ -625,7 +677,7 @@ const SummonerProfile = () => {
                           <thead>
                             <tr>
                               <th colSpan="11" className="text-start">
-                                {!match.win ? "Win" : "Loss"} ({!match.win ? "Blue Team" : "Red Team"})
+                                {match.win ? "Win" : "Loss"} ({match.win ? "Blue Team" : "Red Team"})
                               </th>
                             </tr>
                           </thead>
@@ -644,19 +696,49 @@ const SummonerProfile = () => {
                                   />
                                 </td>
                                 <td>
-                                  <img src="/api/placeholder/25/25" width="25" alt="Summoner Spell" /><br />
-                                  <img src="/api/placeholder/25/25" width="25" alt="Summoner Spell" />
+                                  <img src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(match.summoner1Id)}.png`} width="25" alt={`${player.summoner1Id}`} /><br />
+                                  <img src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(match.summoner2Id)}.png`} width="25" alt={`${player.summoner2Id}`} />
                                 </td>
                                 <td>
-                                  <img src="/api/placeholder/24/24" width="24" alt="Rune" /><br />
-                                  <img src="/api/placeholder/20/20" width="20" alt="Rune" />
+                                  <img
+                                    src={
+                                      match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.primaryRuneId}.png`
+                                        : ""
+                                    }
+                                    width="25"
+                                    alt={`${player.primaryRuneId}`}
+                                  /><br />
+                                  <img
+                                    src={
+                                      match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.subStyleId}.png`
+                                        : ""
+                                    }
+                                    width="25"
+                                    alt={`${player.subStyleId}`}
+                                  />
                                 </td>
                                 <td>
-                                  <div className="mx-1 d-none d-md-block" style={{ maxWidth: "120px" }}>
-                                    <div className="row row-cols-4 gx-1 gy-1">
-                                      {Array(7).fill(0).map((_, i) => (
+                                  <div className="mx-1 d-none d-md-block" style={{ maxWidth: "300px" }}>
+                                    <div className="row row-cols-4 gx-1 gy-0">
+                                      {[player.item0, player.item1, player.item2, player.item6, player.item3, player.item4, player.item5].map((itemId, i) => (
                                         <div className="col" key={i}>
-                                          <img src="/api/placeholder/25/25" className="img-fluid" width="25" alt="Item" />
+                                          {itemId > 0 ? (
+                                            <img
+                                              src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/item/${itemId}.png`}
+                                              className="img-fluid"
+                                              width="30"
+                                              alt={`Item ${i}`}
+                                            />
+                                          ) : (
+                                            <div
+                                              className="img-fluid"
+                                              style={{
+                                                width: "25px",
+                                                height: "25px",
+                                                backgroundColor: "#000",
+                                              }}
+                                            ></div>
+                                          )}
                                         </div>
                                       ))}
                                     </div>
@@ -721,7 +803,5 @@ const getQueueDescription = (queueId) => {
   };
   return queueMap[queueId] || `Unknown Queue`;
 }
-
-
 
 export default SummonerProfile;
