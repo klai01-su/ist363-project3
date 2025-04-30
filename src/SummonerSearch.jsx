@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import '../bootstrap-5.3.3/dist/css/bootstrap.min.css';
 import '../bootstrap-5.3.3/dist/js/bootstrap.bundle.min.js';
+
+
 
 const REGION_ROUTING = {
   "NA": { platform: "na1", routing: "americas", label: "North America" },
   "KR": { platform: "kr", routing: "asia", label: "Korea" },
   "EUW": { platform: "euw1", routing: "europe", label: "Europe West" }
 };
+
 
 const SummonerProfile = () => {
   const [region, setRegion] = useState("NA");
@@ -39,7 +42,6 @@ const SummonerProfile = () => {
 
       const { platform, routing } = REGION_ROUTING[region];
 
-      // Fetch account data
       const accountRes = await fetch(
         `https://${routing}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
         { headers: { "X-Riot-Token": API_KEY } }
@@ -48,7 +50,6 @@ const SummonerProfile = () => {
       const accountData = await accountRes.json();
       const puuid = accountData.puuid;
 
-      // Fetch summoner data
       const summonerRes = await fetch(
         `https://${platform}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`,
         { headers: { "X-Riot-Token": API_KEY } }
@@ -56,7 +57,6 @@ const SummonerProfile = () => {
       if (!summonerRes.ok) throw new Error("Failed to fetch summoner data");
       const summoner = await summonerRes.json();
 
-      // Fetch ranked data
       const rankedRes = await fetch(
         `https://${platform}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summoner.id}`,
         { headers: { "X-Riot-Token": API_KEY } }
@@ -67,7 +67,6 @@ const SummonerProfile = () => {
       const soloQueue = rankedDataArray.find(entry => entry.queueType === "RANKED_SOLO_5x5");
       const flexQueue = rankedDataArray.find(entry => entry.queueType === "RANKED_FLEX_SR");
 
-      // Fetch match IDs
       const matchRes = await fetch(
         `https://${routing}.api.riotgames.com/lol/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=10`,
         { headers: { "X-Riot-Token": API_KEY } }
@@ -75,7 +74,6 @@ const SummonerProfile = () => {
       if (!matchRes.ok) throw new Error("Failed to fetch match IDs");
       const matchIds = await matchRes.json();
 
-      // Fetch match details
       const matchDetails = await Promise.all(
         matchIds.map(async (matchId) => {
           const matchDetailRes = await fetch(
@@ -87,7 +85,35 @@ const SummonerProfile = () => {
         })
       );
 
-      // Process summoner data
+      const allSummonerIds = new Set();
+
+      matchDetails.forEach(match => {
+        match.info.participants.forEach(p => {
+          if (p.summonerId) {
+            allSummonerIds.add(p.summonerId);
+          }
+        });
+      });
+
+      const playerRankMap = {};
+
+      await Promise.all(
+        Array.from(allSummonerIds).map(async (id) => {
+          try {
+            const res = await fetch(
+              `https://${platform}.api.riotgames.com/lol/league/v4/entries/by-summoner/${id}`,
+              { headers: { "X-Riot-Token": API_KEY } }
+            );
+            if (!res.ok) throw new Error();
+            const data = await res.json();
+            const solo = data.find(entry => entry.queueType === "RANKED_SOLO_5x5");
+            playerRankMap[id] = solo ? { tier: solo.tier, rank: solo.rank } : { tier: "Unranked", rank: "" };
+          } catch {
+            playerRankMap[id] = { tier: "Unranked", rank: "" };
+          }
+        })
+      );
+
       setSummonerData({
         gameName: accountData.gameName,
         tagLine: accountData.tagLine,
@@ -96,7 +122,6 @@ const SummonerProfile = () => {
         iconId: summoner.profileIconId,
       });
 
-      // Process ranked data
       setRankedData({
         solo: soloQueue ? {
           tier: soloQueue.tier,
@@ -116,7 +141,7 @@ const SummonerProfile = () => {
         } : null
       });
 
-      // Process match data
+
       const processedMatches = matchDetails.map(match => {
         const player = match.info.participants.find(p => p.puuid === puuid);
         const gameDuration = Math.floor(match.info.gameDuration / 60) + "m " + (match.info.gameDuration % 60) + "s";
@@ -126,6 +151,7 @@ const SummonerProfile = () => {
           matchId: match.metadata.matchId,
           gameMode: match.info.gameMode,
           gameType: match.info.gameType,
+          queueId: match.info.queueId,
           date: gameCreation,
           duration: gameDuration,
           win: player.win,
@@ -152,31 +178,34 @@ const SummonerProfile = () => {
           teamMembers: match.info.participants
             .filter(p => p.teamId === player.teamId)
             .map(p => ({
-              summonerName: p.summonerName,
+              summonerName: p.riotIdGameName + "#" + p.riotIdTagline,
               championName: p.championName,
               kills: p.kills,
               deaths: p.deaths,
               assists: p.assists,
               cs: p.totalMinionsKilled + p.neutralMinionsKilled,
-              goldEarned: (p.goldEarned / 1000).toFixed(1) + "K"
+              goldEarned: (p.goldEarned / 1000).toFixed(1) + "K",
+              tier: playerRankMap[p.summonerId]?.tier || "Unranked",
+              rank: playerRankMap[p.summonerId]?.rank || ""
             })),
           opposingTeam: match.info.participants
-            .filter(p => p.teamId !== player.teamId)
+            .filter(p => p.teamId === player.teamId)
             .map(p => ({
-              summonerName: p.summonerName,
+              summonerName: p.riotIdGameName + "#" + p.riotIdTagline,
               championName: p.championName,
               kills: p.kills,
               deaths: p.deaths,
               assists: p.assists,
               cs: p.totalMinionsKilled + p.neutralMinionsKilled,
-              goldEarned: (p.goldEarned / 1000).toFixed(1) + "K"
+              goldEarned: (p.goldEarned / 1000).toFixed(1) + "K",
+              tier: playerRankMap[p.summonerId]?.tier || "Unranked",
+              rank: playerRankMap[p.summonerId]?.rank || ""
             }))
         };
       });
 
       setMatches(processedMatches);
 
-      // Calculate champion statistics
       const champStats = {};
       processedMatches.forEach(match => {
         if (!champStats[match.championName]) {
@@ -242,6 +271,7 @@ const SummonerProfile = () => {
     }
   };
 
+
   return (
     <div className="profile">
       <div className="main-container">
@@ -299,11 +329,16 @@ const SummonerProfile = () => {
             <div className="row justify-content-md-center">
               <div className="col-lg-9 mb-3">
                 <div className="card text-bg-dark">
-                  <img 
-                    src="https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Aatrox_0.jpg"
-                    className="card-img profile-img" 
-                    alt="Profile Background"
-                  />
+                <img 
+                  src={
+                    championStats?.length > 0 && championStats[0]?.championName
+                      ? `https://ddragon.leagueoflegends.com/cdn/img/champion/centered/${championStats[0].championName}_0.jpg`
+                      : "https://ddragon.leagueoflegends.com/cdn/img/bg/F5141416.png"
+                  }
+                  className="card-img profile-img" 
+                  alt="Profile Background"
+                />
+
                   <div className="card-img-overlay">
                     <div className="d-flex">
                       <img 
@@ -341,8 +376,8 @@ const SummonerProfile = () => {
                     <div className="col-sm-2 ps-2">
                       <img 
                         src={rankedData.solo 
-                          ? `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests/${rankedData.solo.tier.toLowerCase()}.png`
-                          : "/api/placeholder/72/72"}
+                          ? `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests/${rankedData.solo.tier.toLowerCase()}.svg`
+                          : "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests/unranked.png"}
                         width="72"
                         alt="Rank Icon"
                       />
@@ -356,7 +391,7 @@ const SummonerProfile = () => {
                           <br />
                           {rankedData.solo 
                             ? `${rankedData.solo.wins}W - ${rankedData.solo.losses}L (${rankedData.solo.winRate}%)`
-                            : "0W - 0L (0%)"}
+                            : "N/A"}
                         </div>
                       </div>
                     </div>
@@ -369,8 +404,8 @@ const SummonerProfile = () => {
                     <div className="col-sm-2 ps-2">
                       <img 
                         src={rankedData.flex 
-                          ? `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests/${rankedData.flex.tier.toLowerCase()}.png`
-                          : "/api/placeholder/72/72"}
+                          ? `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests/${rankedData.flex.tier.toLowerCase()}.svg`
+                          : "https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-static-assets/global/default/images/ranked-mini-crests/unranked.png"}
                         width="72"
                         alt="Rank Icon"
                       />
@@ -384,7 +419,7 @@ const SummonerProfile = () => {
                           <br />
                           {rankedData.flex 
                             ? `${rankedData.flex.wins}W - ${rankedData.flex.losses}L (${rankedData.flex.winRate}%)`
-                            : "0W - 0L (0%)"}
+                            : "N/A"}
                         </div>
                       </div>
                     </div>
@@ -394,7 +429,7 @@ const SummonerProfile = () => {
 
               <div className="col-lg-6">
                 <div className="card mb-3">
-                  <div className="card-header">Recent Games</div>
+                  <div className="card-header">Last 10 Games</div>
                   <div className="row g-0">
                     <div className="col-md-6 d-flex align-items-center">
                       <div className="p-4">
@@ -407,11 +442,16 @@ const SummonerProfile = () => {
                               const totalKills = matches.reduce((sum, match) => sum + match.kills, 0);
                               const totalDeaths = matches.reduce((sum, match) => sum + match.deaths, 0);
                               const totalAssists = matches.reduce((sum, match) => sum + match.assists, 0);
+                              const count = matches.length;
+
+                              const avgKills = (totalKills / count).toFixed(1);
+                              const avgDeaths = (totalDeaths / count).toFixed(1);
+                              const avgAssists = (totalAssists / count).toFixed(1);
                               const kda = totalDeaths === 0 ? 'Perfect' : ((totalKills + totalAssists) / totalDeaths).toFixed(2);
-                              
+
                               return (
                                 <>
-                                  {totalKills} / {totalDeaths} / {totalAssists}<br />
+                                  {avgKills} / {avgDeaths} / {avgAssists}<br />
                                   {kda} KDA
                                 </>
                               );
@@ -420,8 +460,7 @@ const SummonerProfile = () => {
                         )}
                         {matches.length === 0 && (
                           <>
-                            0 / 0 / 0<br />
-                            0.00 KDA
+                            N/A
                           </>
                         )}
                       </div>
@@ -442,7 +481,7 @@ const SummonerProfile = () => {
                             ))
                           ) : (
                             <>
-                              <img src="/api/placeholder/20/20" width="20" alt="Champion" /> 0% (0W / 0L) 0.00 KDA<br />
+                              N/A
                             </>
                           )}
                         </div>
@@ -457,7 +496,7 @@ const SummonerProfile = () => {
                       <div className="card-body d-flex justify-content-between align-items-center">
                         <div className="d-flex align-items-center">
                           <div className="mx-2">
-                            {match.gameMode}<br />
+                          {getQueueDescription(match.queueId)}<br />
                             {match.date}<br />
                             {match.win ? "Win" : "Loss"}<br />
                             {match.duration}
@@ -469,13 +508,11 @@ const SummonerProfile = () => {
                             alt={match.championName}
                           />
                           <div className="mx-2">
-                            {match.kills} / {match.deaths} / {match.assists}
-                          </div>
-                          <div className="mx-2">
+                            {match.kills} / {match.deaths} / {match.assists} <br />
                             {match.kda} KDA
                           </div>
 
-                          <div className="mx-1 d-none d-md-block">
+                          <div className="mx-2 d-none d-md-block">
                             <img 
                               src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(match.summoner1Id)}.png`} 
                               width="36" 
@@ -484,29 +521,31 @@ const SummonerProfile = () => {
                             /><br />
                             <img 
                               src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(match.summoner2Id)}.png`} 
-                              width="36" 
+                              width="36"
                               className="p-1"
                               alt="Summoner Spell 2"
                             />
                           </div>
-
                           <div className="d-none d-md-block">
-                            <img 
-                              src={match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.primaryRuneId}.png` : "/api/placeholder/36/36"}
+                            <img
+                              src={
+                                match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.primaryRuneId}.png`
+                                  : "/api/placeholder/36/36"
+                              }
                               width="36"
-                              alt="Primary Rune"
+                              alt={`${match.primaryRuneId}`}
                             /><br />
                             <img 
                               src={match.subStyleId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.subStyleId}.png` : "/api/placeholder/36/36"}
                               width="36" 
                               className="p-1"
-                              alt="Secondary Rune"
+                              alt={`${match.subStyleId}`}
                             />
                           </div>
                           
                           <div className="mx-1 d-none d-md-block" style={{ maxWidth: "150px" }}>
                             <div className="row row-cols-4 g-1">
-                              {[match.item0, match.item1, match.item2, match.item3, match.item4, match.item5, match.item6]
+                              {[match.item0, match.item1, match.item2, match.item6, match.item3, match.item4, match.item5]
                                 .map((itemId, idx) => (
                                   <div className="col" key={idx}>
                                     {itemId > 0 ? (
@@ -517,7 +556,7 @@ const SummonerProfile = () => {
                                         alt={`Item ${idx}`}
                                       />
                                     ) : (
-                                      <div style={{ width: "36px", height: "36px", backgroundColor: "#eee" }}></div>
+                                      <div className="img-fluid" style={{ width: "34px", height: "34px", backgroundColor: "#000" }}></div>
                                     )}
                                   </div>
                                 ))}
@@ -547,7 +586,10 @@ const SummonerProfile = () => {
                           <tbody>
                             {match.teamMembers.map((player, idx) => (
                               <tr key={idx}>
-                                <td>{player.summonerName}<br /><small>Rank + Tier</small></td>
+                                <td>
+                                  {player.summonerName}<br />
+                                  <small>{player.tier} {player.rank}</small>
+                                </td>
                                 <td>
                                   <img 
                                     src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/champion/${player.championName}.png`} 
@@ -590,7 +632,10 @@ const SummonerProfile = () => {
                           <tbody>
                             {match.opposingTeam.map((player, idx) => (
                               <tr key={idx}>
-                                <td>{player.summonerName}<br /><small>Rank + Tier</small></td>
+                                <td>
+                                  {player.summonerName}<br />
+                                  <small>{player.tier} {player.rank}</small>
+                                </td>
                                 <td>
                                   <img 
                                     src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/champion/${player.championName}.png`} 
@@ -645,22 +690,38 @@ const SummonerProfile = () => {
   );
 };
 
-// Helper function to get summoner spell name from ID
+
 const getSummonerSpellName = (id) => {
   const spellMap = {
-    1: "Cleanse",
+    1: "Boost",
     3: "Exhaust",
     4: "Flash",
-    6: "Ghost",
+    6: "Haste",
     7: "Heal",
     11: "Smite",
     12: "Teleport",
-    13: "Clarity",
-    14: "Ignite",
+    13: "Mana",
+    14: "Dot",
     21: "Barrier",
-    32: "Mark" // Snowball
+    32: "Snowball",
+    2201: "CherryHold",
+    2202: "CherryFlash"
   };
-  return spellMap[id] || "Flash"; // Default to Flash if not found
+  return spellMap[id];
 };
+
+const getQueueDescription = (queueId) => {
+  const queueMap = {
+    400: "Blind Pick",
+    420: "Ranked Solo",
+    430: "Normal Draft",
+    440: "Ranked Flex",
+    450: "ARAM",
+    1700: "Arena"
+  };
+  return queueMap[queueId] || `Unknown Queue`;
+}
+
+
 
 export default SummonerProfile;
