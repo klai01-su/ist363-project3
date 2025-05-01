@@ -312,7 +312,7 @@ const SummonerProfile = () => {
             <input
               type="text"
               className="search-input"
-              placeholder="Game Name + #ID"
+              placeholder="Game Name + #ID (e.g. Doublelift#NA01)"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
