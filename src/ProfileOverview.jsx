@@ -79,7 +79,6 @@ const ProfileChampions = ({ summonerData, championStats }) => {
   );
 };
 
-// Live Game placeholder component
 const LiveGame = ({ summonerData }) => {
   return (
     <div className="container-fluid mx-auto">
@@ -97,7 +96,6 @@ const LiveGame = ({ summonerData }) => {
   );
 };
 
-// Helper functions
 const getSummonerSpellName = (id) => {
   const spellMap = {
     1: "Boost",
@@ -129,7 +127,40 @@ const getQueueDescription = (queueId) => {
   return queueMap[queueId] || `Unknown Queue`;
 };
 
-// Main overview component (your existing match history display)
+const getRuneImage = (runeId) => {
+  const runeMap = {
+    8000: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7201_Precision.png",
+    8100: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7200_Domination.png",
+    8200: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7202_Sorcery.png",
+    8300: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7203_Whimsy.png",
+    8400: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7204_Resolve.png",
+  
+    8005: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
+    8008: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
+    8021: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
+    8010: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Conqueror/Conqueror.png",
+  
+    8112: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/Electrocute/Electrocute.png",
+    8128: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
+    9923: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
+  
+    8214: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/SummonAery/SummonAery.png",
+    8229: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png",
+    8230: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/PhaseRush/PhaseRush.png",
+  
+    8351: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png",
+    8360: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png",
+    8369: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png",
+  
+    8437: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png",
+    8439: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
+    8465: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Guardian/Guardian.png",
+  };
+  
+  
+  return runeMap[runeId] || "Unknown Rune";
+};
+
 const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isLoading, toggleMatchDetails }) => {
   return (
     <div className="container-fluid mx-auto">
@@ -236,7 +267,7 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                   <div className="card-text">
                     {championStats.length > 0 ? (
                       championStats
-                        .slice(0, 3) // Only show top 3 champions
+                        .slice(0, 3)
                         .map((champ, index) => (
                           <div key={index}>
                             <img 
@@ -295,12 +326,12 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                     </div>
                     <div className="d-none d-md-block">
                       <img
-                        src={match.subStyleId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.primaryRuneId}.png` : ""}
+                        src={match.primaryRuneId ? `${getRuneImage(match.primaryRuneId)}` : ""}
                         width="36"
                         alt={`${match.primaryRuneId}`}
                       /><br />
                       <img 
-                        src={match.subStyleId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.subStyleId}.png` : ""}
+                        src={match.subStyleId ? `${getRuneImage(match.subStyleId)}` : ""}
                         width="36" 
                         className="p-1"
                         alt={`${match.subStyleId}`}
@@ -336,9 +367,7 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                   </button>
                 </div>
               </div>
-              {/* Rest of your match details implementation */}
               <div className="collapse" id={`collapse-${match.matchId}`}>
-                {/* ... existing match details code here ... */}
                 <div className="card card-body outer-bordered-table">
                   <table className="table align-middle text-center">
                     <thead>
@@ -368,19 +397,13 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                           </td>
                           <td>
                             <img
-                              src={
-                                match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.primaryRuneId}.png`
-                                  : ""
-                              }
+                              src={player.primaryRuneId ? `${getRuneImage(player.primaryRuneId)}` : ""}
                               width="25"
                               alt={`${player.primaryRuneId}`}
                             /><br />
                             <img
-                              src={
-                                match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.subStyleId}.png`
-                                  : ""
-                              }
-                              width="25"
+                              src={match.subStyleId ? `${getRuneImage(match.subStyleId)}` : ""}
+                              width="18"
                               alt={`${player.subStyleId}`}
                             />
                           </td>
@@ -411,7 +434,7 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                               </div>
                             </div>
                           </td>
-                          <td>{player.kills} / {player.deaths} / {player.assists}</td>
+                          <td>{player.kills}/{player.deaths}/{player.assists}</td>
                           <td>{player.cs} CS ({player.csPerMin})</td>
                           <td>{player.goldEarned}</td>
                         </tr>
@@ -443,20 +466,14 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                             <img src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(match.summoner2Id)}.png`} width="25" alt={`${player.summoner2Id}`} />
                           </td>
                           <td>
-                            <img
-                              src={
-                                match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.primaryRuneId}.png`
-                                  : ""
-                              }
+                          <img
+                              src={player.primaryRuneId ? `${getRuneImage(player.primaryRuneId)}` : ""}
                               width="25"
                               alt={`${player.primaryRuneId}`}
                             /><br />
                             <img
-                              src={
-                                match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.subStyleId}.png`
-                                  : ""
-                              }
-                              width="25"
+                              src={match.subStyleId ? `${getRuneImage(match.subStyleId)}` : ""}
+                              width="18"
                               alt={`${player.subStyleId}`}
                             />
                           </td>
@@ -522,7 +539,7 @@ const SummonerProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [championStats, setChampionStats] = useState([]);
 
-  // Add a new state for the active page/tab
+
   const [activePage, setActivePage] = useState("overview");
 
   const API_KEY = import.meta.env.VITE_RIOT_API_KEY;
@@ -779,6 +796,8 @@ const SummonerProfile = () => {
     }
   };
 
+  
+
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       handleSearch();
@@ -800,7 +819,6 @@ const SummonerProfile = () => {
     }
   };
 
-  
 
   return (
     <div className="profile">
@@ -889,7 +907,6 @@ const SummonerProfile = () => {
                   </div>
                 </div>
 
-                {/* Navigation Tabs - Updated with onClick handlers */}
                 <div className="nav-bar d-flex text-center mt-3">
                   <a 
                     href="#" 
@@ -926,7 +943,6 @@ const SummonerProfile = () => {
             </div>
           </div>
 
-          {/* Render different content based on active tab */}
           {activePage === 'overview' && (
             <ProfileOverview 
               summonerData={summonerData}

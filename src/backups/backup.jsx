@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
-import '../bootstrap-5.3.3/dist/css/bootstrap.min.css';
-import '../bootstrap-5.3.3/dist/js/bootstrap.bundle.min.js';
 
 const REGION_ROUTING = {
   "NA": { platform: "na1", routing: "americas", label: "North America" },
@@ -9,7 +7,6 @@ const REGION_ROUTING = {
   "EUW": { platform: "euw1", routing: "europe", label: "Europe West" }
 };
 
-// Champions page component
 const ProfileChampions = ({ summonerData, championStats }) => {
   return (
     <div className="container-fluid mx-auto">
@@ -23,7 +20,7 @@ const ProfileChampions = ({ summonerData, championStats }) => {
                 <th scope="col">Played</th>
                 <th scope="col">Win Rate</th>
                 <th scope="col">KDA</th>
-                <th scope="col">CS/m</th>
+                <th scope="col">CS/min</th>
                 <th scope="col">Duration</th>
               </tr>
             </thead>
@@ -59,7 +56,7 @@ const ProfileChampions = ({ summonerData, championStats }) => {
                       src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/champion/${champ.championName}.png`} 
                       width="30" 
                       alt={champ.championName}
-                    /> {champ.championName}
+                    />
                   </td>
                   <td>{champ.wins}W - {champ.losses}L</td>
                   <td>{champ.winRate}%</td>
@@ -82,7 +79,6 @@ const ProfileChampions = ({ summonerData, championStats }) => {
   );
 };
 
-// Live Game placeholder component
 const LiveGame = ({ summonerData }) => {
   return (
     <div className="container-fluid mx-auto">
@@ -100,7 +96,6 @@ const LiveGame = ({ summonerData }) => {
   );
 };
 
-// Helper functions
 const getSummonerSpellName = (id) => {
   const spellMap = {
     1: "Boost",
@@ -132,7 +127,8 @@ const getQueueDescription = (queueId) => {
   return queueMap[queueId] || `Unknown Queue`;
 };
 
-// Main overview component (your existing match history display)
+
+
 const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isLoading, toggleMatchDetails }) => {
   return (
     <div className="container-fluid mx-auto">
@@ -239,7 +235,7 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                   <div className="card-text">
                     {championStats.length > 0 ? (
                       championStats
-                        .slice(0, 3) // Only show top 3 champions
+                        .slice(0, 3)
                         .map((champ, index) => (
                           <div key={index}>
                             <img 
@@ -298,10 +294,7 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                     </div>
                     <div className="d-none d-md-block">
                       <img
-                        src={
-                          match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.primaryRuneId}.png`
-                            : ""
-                        }
+                        src={match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.primaryRuneId}.png` : ""}
                         width="36"
                         alt={`${match.primaryRuneId}`}
                       /><br />
@@ -342,9 +335,7 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                   </button>
                 </div>
               </div>
-              {/* Rest of your match details implementation */}
               <div className="collapse" id={`collapse-${match.matchId}`}>
-                {/* ... existing match details code here ... */}
                 <div className="card card-body outer-bordered-table">
                   <table className="table align-middle text-center">
                     <thead>
@@ -528,7 +519,7 @@ const SummonerProfile = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [championStats, setChampionStats] = useState([]);
 
-  // Add a new state for the active page/tab
+
   const [activePage, setActivePage] = useState("overview");
 
   const API_KEY = import.meta.env.VITE_RIOT_API_KEY;
@@ -739,6 +730,7 @@ const SummonerProfile = () => {
 
       setMatches(processedMatches);
 
+      
       const champStats = {};
       processedMatches.forEach(match => {
         if (!champStats[match.championName]) {
@@ -775,6 +767,7 @@ const SummonerProfile = () => {
 
       setChampionStats(topChamps);
 
+
       setIsLoading(false);
     } catch (err) {
       setError("Error fetching data. Check Riot ID & region.");
@@ -782,6 +775,8 @@ const SummonerProfile = () => {
       setIsLoading(false);
     }
   };
+
+  
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
@@ -804,7 +799,6 @@ const SummonerProfile = () => {
     }
   };
 
-  
 
   return (
     <div className="profile">
@@ -893,7 +887,6 @@ const SummonerProfile = () => {
                   </div>
                 </div>
 
-                {/* Navigation Tabs - Updated with onClick handlers */}
                 <div className="nav-bar d-flex text-center mt-3">
                   <a 
                     href="#" 
@@ -930,7 +923,6 @@ const SummonerProfile = () => {
             </div>
           </div>
 
-          {/* Render different content based on active tab */}
           {activePage === 'overview' && (
             <ProfileOverview 
               summonerData={summonerData}
