@@ -20,7 +20,7 @@ const ProfileChampions = ({ summonerData, championStats }) => {
                 <th scope="col">Played</th>
                 <th scope="col">Win Rate</th>
                 <th scope="col">KDA</th>
-                <th scope="col">CS/m</th>
+                <th scope="col">CS/min</th>
                 <th scope="col">Duration</th>
               </tr>
             </thead>
@@ -295,10 +295,7 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                     </div>
                     <div className="d-none d-md-block">
                       <img
-                        src={
-                          match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.primaryRuneId}.png`
-                            : ""
-                        }
+                        src={match.subStyleId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.primaryRuneId}.png` : ""}
                         width="36"
                         alt={`${match.primaryRuneId}`}
                       /><br />
@@ -736,6 +733,7 @@ const SummonerProfile = () => {
 
       setMatches(processedMatches);
 
+      
       const champStats = {};
       processedMatches.forEach(match => {
         if (!champStats[match.championName]) {
@@ -771,6 +769,7 @@ const SummonerProfile = () => {
         .slice(0, 10);
 
       setChampionStats(topChamps);
+
 
       setIsLoading(false);
     } catch (err) {
