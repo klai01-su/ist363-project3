@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
+import '../bootstrap-5.3.3/dist/css/bootstrap.min.css';
+import '../bootstrap-5.3.3/dist/js/bootstrap.bundle.min.js';
 
 const REGION_ROUTING = {
   "NA": { platform: "na1", routing: "americas", label: "North America" },
@@ -7,6 +9,7 @@ const REGION_ROUTING = {
   "EUW": { platform: "euw1", routing: "europe", label: "Europe West" }
 };
 
+// Champions page component
 const ProfileChampions = ({ summonerData, championStats }) => {
   return (
     <div className="container-fluid mx-auto">
@@ -56,7 +59,7 @@ const ProfileChampions = ({ summonerData, championStats }) => {
                       src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/champion/${champ.championName}.png`} 
                       width="30" 
                       alt={champ.championName}
-                    />
+                    /> {champ.championName}
                   </td>
                   <td>{champ.wins}W - {champ.losses}L</td>
                   <td>{champ.winRate}%</td>
