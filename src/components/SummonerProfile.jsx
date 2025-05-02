@@ -4,7 +4,7 @@ import ProfileHeader from "./ProfileHeader";
 import NavigationTabs from "./NavigationTabs";
 import ProfileOverview from "./ProfileOverview";
 import ProfileChampions from "./ProfileChampions";
-// import LiveGame from "./LiveGame";
+import LiveGame from "./LiveGame";
 import useSummonerData from "../hooks/useSummonerData";
 
 const SummonerProfile = () => {
