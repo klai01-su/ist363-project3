@@ -7,7 +7,56 @@ const REGION_ROUTING = {
   "EUW": { platform: "euw1", routing: "europe", label: "Europe West" }
 };
 
-const ProfileChampions = ({ summonerData, championStats }) => {
+const ProfileChampions = ({ summonerData, championStats, matches }) => {
+  const enhancedChampionStats = React.useMemo(() => {
+    if (!championStats || !matches) return championStats;
+    
+    const champData = {};
+    
+    matches.forEach(match => {
+      if (!champData[match.championName]) {
+        champData[match.championName] = {
+          totalCS: 0,
+          totalDurationMinutes: 0,
+          matchCount: 0
+        };
+      }
+      
+      const durationParts = match.duration.split(' ');
+      const minutes = parseInt(durationParts[0].replace('m', ''));
+      const seconds = parseInt(durationParts[1].replace('s', ''));
+      const durationInMinutes = minutes + (seconds / 60);
+      
+      champData[match.championName].totalCS += match.cs;
+      champData[match.championName].totalDurationMinutes += durationInMinutes;
+      champData[match.championName].matchCount += 1;
+    });
+    
+    return championStats.map(champ => {
+      const champMatchData = champData[champ.championName];
+      
+      if (champMatchData && champMatchData.matchCount > 0) {
+        const avgCSPerMin = (champMatchData.totalCS / champMatchData.totalDurationMinutes).toFixed(1);
+        
+        const totalHours = Math.floor(champMatchData.totalDurationMinutes / 60);
+        const totalMinutes = Math.floor(champMatchData.totalDurationMinutes % 60);
+        const formattedDuration = `${totalHours}h ${totalMinutes}m`;
+        
+        return {
+          ...champ,
+          csPerMin: avgCSPerMin,
+          totalDuration: formattedDuration
+        };
+      }
+      
+      return {
+        ...champ,
+        csPerMin: "0.0",
+        totalDuration: "00h 00m"
+      };
+    });
+  }, [championStats, matches]);
+
   return (
     <div className="container-fluid mx-auto">
       <div className="row justify-content-md-center">
@@ -29,26 +78,51 @@ const ProfileChampions = ({ summonerData, championStats }) => {
                 <th>-</th>
                 <td>All Champions</td>
                 <td>
-                  {championStats.reduce((sum, champ) => sum + champ.wins, 0)}W - {championStats.reduce((sum, champ) => sum + champ.losses, 0)}L
+                  {enhancedChampionStats.reduce((sum, champ) => sum + champ.wins, 0)}W - {enhancedChampionStats.reduce((sum, champ) => sum + champ.losses, 0)}L
                 </td>
                 <td>
-                  {championStats.length > 0 
-                    ? Math.round((championStats.reduce((sum, champ) => sum + champ.wins, 0) / 
-                       (championStats.reduce((sum, champ) => sum + champ.games, 0))) * 100) 
+                  {enhancedChampionStats.length > 0 
+                    ? Math.round((enhancedChampionStats.reduce((sum, champ) => sum + champ.wins, 0) / 
+                       (enhancedChampionStats.reduce((sum, champ) => sum + champ.games, 0))) * 100) 
                     : 0}%
                 </td>
                 <td>
-                  {championStats.length > 0 
-                    ? ((championStats.reduce((sum, champ) => sum + champ.kills, 0) + 
-                        championStats.reduce((sum, champ) => sum + champ.assists, 0)) / 
-                        Math.max(1, championStats.reduce((sum, champ) => sum + champ.deaths, 0))).toFixed(2)
+                  {enhancedChampionStats.length > 0 
+                    ? ((enhancedChampionStats.reduce((sum, champ) => sum + champ.kills, 0) + 
+                        enhancedChampionStats.reduce((sum, champ) => sum + champ.assists, 0)) / 
+                        Math.max(1, enhancedChampionStats.reduce((sum, champ) => sum + champ.deaths, 0))).toFixed(2)
                     : "0.0"}
                 </td>
-                <td>0.0</td>
-                <td>00h 00m</td>
+                <td>
+                  {enhancedChampionStats.length > 0
+                    ? (matches.reduce((sum, match) => sum + match.cs, 0) / 
+                       matches.reduce((sum, match) => {
+                         const durationParts = match.duration.split(' ');
+                         const minutes = parseInt(durationParts[0].replace('m', ''));
+                         const seconds = parseInt(durationParts[1].replace('s', ''));
+                         return sum + (minutes + seconds/60);
+                       }, 0)).toFixed(1)
+                    : "0.0"}
+                </td>
+                <td>
+                  {matches.length > 0
+                    ? (() => {
+                        const totalMinutes = matches.reduce((sum, match) => {
+                          const durationParts = match.duration.split(' ');
+                          const minutes = parseInt(durationParts[0].replace('m', ''));
+                          const seconds = parseInt(durationParts[1].replace('s', ''));
+                          return sum + minutes + (seconds/60);
+                        }, 0);
+                        
+                        const hours = Math.floor(totalMinutes / 60);
+                        const mins = Math.floor(totalMinutes % 60);
+                        return `${hours}h ${mins}m`;
+                      })()
+                    : "00h 00m"}
+                </td>
               </tr>
               
-              {championStats.map((champ, index) => (
+              {enhancedChampionStats.map((champ, index) => (
                 <tr key={index}>
                   <th scope="row">{index + 1}</th>
                   <td>
@@ -57,16 +131,17 @@ const ProfileChampions = ({ summonerData, championStats }) => {
                       width="30" 
                       alt={champ.championName}
                     />
+                    {" " + champ.championName}
                   </td>
                   <td>{champ.wins}W - {champ.losses}L</td>
                   <td>{champ.winRate}%</td>
                   <td>{champ.kda}</td>
-                  <td>0.0</td>
-                  <td>00h 00m</td>
+                  <td>{champ.csPerMin}</td>
+                  <td>{champ.totalDuration}</td>
                 </tr>
               ))}
               
-              {championStats.length === 0 && (
+              {enhancedChampionStats.length === 0 && (
                 <tr>
                   <td colSpan="7" className="text-center">No champion data available</td>
                 </tr>
@@ -127,7 +202,39 @@ const getQueueDescription = (queueId) => {
   return queueMap[queueId] || `Unknown Queue`;
 };
 
-
+const getRuneImage = (runeId) => {
+  const runeMap = {
+    8000: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7201_Precision.png",
+    8100: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7200_Domination.png",
+    8200: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7202_Sorcery.png",
+    8300: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7203_Whimsy.png",
+    8400: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7204_Resolve.png",
+  
+    8005: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/PressTheAttack/PressTheAttack.png",
+    8008: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png",
+    8021: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png",
+    8010: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/Conqueror/Conqueror.png",
+  
+    8112: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/Electrocute/Electrocute.png",
+    8128: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/DarkHarvest/DarkHarvest.png",
+    9923: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/HailOfBlades/HailOfBlades.png",
+  
+    8214: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/SummonAery/SummonAery.png",
+    8229: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/ArcaneComet/ArcaneComet.png",
+    8230: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/PhaseRush/PhaseRush.png",
+  
+    8351: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/GlacialAugment/GlacialAugment.png",
+    8360: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/UnsealedSpellbook/UnsealedSpellbook.png",
+    8369: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/FirstStrike/FirstStrike.png",
+  
+    8437: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/GraspOfTheUndying/GraspOfTheUndying.png",
+    8439: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png",
+    8465: "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Guardian/Guardian.png",
+  };
+  
+  
+  return runeMap[runeId] || "Unknown Rune";
+};
 
 const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isLoading, toggleMatchDetails }) => {
   return (
@@ -294,13 +401,14 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                     </div>
                     <div className="d-none d-md-block">
                       <img
-                        src={match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.primaryRuneId}.png` : ""}
+                        src={match.primaryRuneId ? `${getRuneImage(match.primaryRuneId)}` : ""}
                         width="36"
+                        className="p-1"
                         alt={`${match.primaryRuneId}`}
                       /><br />
                       <img 
-                        src={match.subStyleId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${match.subStyleId}.png` : ""}
-                        width="36" 
+                        src={match.subStyleId ? `${getRuneImage(match.subStyleId)}` : ""}
+                        width="32" 
                         className="p-1"
                         alt={`${match.subStyleId}`}
                       />
@@ -365,19 +473,13 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                           </td>
                           <td>
                             <img
-                              src={
-                                match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.primaryRuneId}.png`
-                                  : ""
-                              }
+                              src={player.primaryRuneId ? `${getRuneImage(player.primaryRuneId)}` : ""}
                               width="25"
                               alt={`${player.primaryRuneId}`}
                             /><br />
                             <img
-                              src={
-                                match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.subStyleId}.png`
-                                  : ""
-                              }
-                              width="25"
+                              src={match.subStyleId ? `${getRuneImage(match.subStyleId)}` : ""}
+                              width="18"
                               alt={`${player.subStyleId}`}
                             />
                           </td>
@@ -408,7 +510,7 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                               </div>
                             </div>
                           </td>
-                          <td>{player.kills} / {player.deaths} / {player.assists}</td>
+                          <td>{player.kills}/{player.deaths}/{player.assists}</td>
                           <td>{player.cs} CS ({player.csPerMin})</td>
                           <td>{player.goldEarned}</td>
                         </tr>
@@ -440,20 +542,14 @@ const ProfileOverview = ({ summonerData, rankedData, matches, championStats, isL
                             <img src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(match.summoner2Id)}.png`} width="25" alt={`${player.summoner2Id}`} />
                           </td>
                           <td>
-                            <img
-                              src={
-                                match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.primaryRuneId}.png`
-                                  : ""
-                              }
+                          <img
+                              src={player.primaryRuneId ? `${getRuneImage(player.primaryRuneId)}` : ""}
                               width="25"
                               alt={`${player.primaryRuneId}`}
                             /><br />
                             <img
-                              src={
-                                match.primaryRuneId ? `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${player.subStyleId}.png`
-                                  : ""
-                              }
-                              width="25"
+                              src={match.subStyleId ? `${getRuneImage(match.subStyleId)}` : ""}
+                              width="18"
                               alt={`${player.subStyleId}`}
                             />
                           </td>
@@ -937,7 +1033,8 @@ const SummonerProfile = () => {
           {activePage === 'champions' && (
             <ProfileChampions 
               summonerData={summonerData} 
-              championStats={championStats} 
+              championStats={championStats}
+              matches={matches} 
             />
           )}
           
