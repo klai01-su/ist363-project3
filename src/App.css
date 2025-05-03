@@ -106,10 +106,10 @@
 }
 
 
-.nav-tab.active:hover {
+/* .nav-tab.active:hover {
     border: 2px solid white;
-    margin: -2px;
-}
+    margin: 0px;
+} */
 
 
 .pie-chart-temp {
@@ -152,10 +152,58 @@
     font-weight: bold;
 }
 
+.outer-bordered-table thead th.header-win {
+    background-color: #587cd4;
+}
+
+.outer-bordered-table thead th.header-loss {
+    background-color: #d54d5a;
+}
+
+
+
+
+/* 
 .live-team-blue {
     background-color: blue;
 }
 
 .live-team-red {
     background-color: red
-}
+} */
+
+/* Live Game Styles */
+.live-team-blue {
+    background-color: #0A64A1;
+    height: 6px;
+  }
+  
+  .live-team-red {
+    background-color: #C23C2A;
+    height: 6px;
+  }
+/*   
+  .nav-bar {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  
+  .nav-tab {
+    flex: 1;
+    padding: 10px;
+    text-decoration: none;
+    color: #6c757d;
+    border-bottom: 3px solid transparent;
+  }
+  
+  .nav-tab:hover {
+    color: #343a40;
+    border-bottom: 3px solid #ddd;
+  }
+  
+  .nav-tab.active {
+    color: #343a40;
+    font-weight: bold;
+    border-bottom: 3px solid #0A64A1;
+  } */

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import SearchBar from "./SearchBar";
 import ProfileHeader from "./ProfileHeader";
 import NavigationTabs from "./NavigationTabs";
@@ -21,10 +21,19 @@ const SummonerProfile = () => {
     rankedData,
     matches,
     championStats,
+    liveGameData,
+    refreshLiveGame,
     toggleMatchDetails,
     activePage,
     setActivePage
   } = useSummonerData();
+
+
+  useEffect(() => {
+    if (activePage === "live" && summonerData) {
+      refreshLiveGame();
+    }
+  }, [activePage, summonerData]);
 
   return (
     <div className="profile">
@@ -71,7 +80,12 @@ const SummonerProfile = () => {
             />
           )}
 
-          {activePage === "live" && <LiveGame summonerData={summonerData} />}
+          {activePage === "live" && (
+            <LiveGame 
+              gameData={liveGameData} 
+              summonerData={summonerData}
+            />
+          )}
         </>
       )}
     </div>

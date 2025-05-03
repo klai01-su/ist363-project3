@@ -64,7 +64,7 @@ const ProfileOverview = ({
 
         <div className="col-lg-6">
           <div className="card mb-3">
-            <div className="card-header">Last 10 Games</div>
+            <div className="card-header">Last {matches.length} Game{matches.length !== 1 ? "s" : ""}</div>
             <div className="row g-0">
               <div className="col-md-6 d-flex align-items-center">
                 <div className="p-4">
@@ -82,6 +82,7 @@ const ProfileOverview = ({
                           <img
                             src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/champion/${champ.championName}.png`}
                             width="20"
+                            className="me-2"
                             alt={champ.championName}
                           />
                           {champ.winRate}% ({champ.wins}W / {champ.losses}L) {champ.kda} KDA<br />
