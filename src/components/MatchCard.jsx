@@ -111,16 +111,18 @@ const MatchCard = ({ match, toggleMatchDetails }) => {
                       {/* <small>{player.tier} {player.rank}</small> */}
                     </td>
                     <td>
-                    <img 
-                        src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/champion/${player.championName}.png`} 
-                        width="40"
-                        alt={player.championName}
-                    />
+                      <img 
+                          src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/champion/${player.championName}.png`} 
+                          width="40"
+                          alt={player.championName}
+                      />
                     </td>
                     <td>
-                    <img src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(player.summoner1Id)}.png`} width="25" alt={`${player.summoner1Id}`} /><br />
-                    <img src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(player.summoner2Id)}.png`} width="25" alt={`${player.summoner2Id}`} />
-                    </td>
+                      <img 
+                        src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(player.summoner1Id)}.png`} width="25" alt={`${player.summoner1Id}`} /><br />
+                      <img 
+                        src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(player.summoner2Id)}.png`} width="25" alt={`${player.summoner2Id}`} />
+                      </td>
                     <td>
                     <img
                         src={player.primaryRuneId ? `${getRuneImage(player.primaryRuneId)}` : ""}

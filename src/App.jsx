@@ -22,19 +22,14 @@ const SummonerProfile = () => {
     rankedData,
     matches,
     championStats,
-    // liveGameData,
-    // refreshLiveGame,
     toggleMatchDetails,
     activePage,
-    setActivePage
+    setActivePage,
+    liveGameData,
+    isLoadingLiveGame,
+    liveGameError,
+    fetchLiveGameData
   } = useSummonerData();
-
-
-  // useEffect(() => {
-  //   if (activePage === "live" && summonerData) {
-  //     refreshLiveGame();
-  //   }
-  // }, [activePage, summonerData]);
 
   return (
     <div className="profile">
@@ -50,7 +45,7 @@ const SummonerProfile = () => {
         />
       </div>
 
-      {error && <div className="alert alert-danger container">{error}</div>}
+      {error && <div className="alert alert-danger main-container">{error}</div>}
       {isLoading && (
         <div className="text-center my-5">
           <div className="spinner-border" role="status" />
@@ -83,8 +78,11 @@ const SummonerProfile = () => {
 
           {activePage === "live" && (
             <LiveGame 
-              // gameData={liveGameData} 
-              // summonerData={summonerData}
+              summonerData={summonerData}
+              liveGameData={liveGameData}
+              isLoadingLiveGame={isLoadingLiveGame}
+              liveGameError={liveGameError}
+              fetchLiveGameData={fetchLiveGameData}
             />
           )}
         </>

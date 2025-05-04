@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import fetchSummonerProfile from "../utils/fetchSummonerProfile";
+import fetchLiveGame from "../utils/fetchLiveGame";
 
 const useSummonerData = () => {
   const [region, setRegion] = useState("");
@@ -7,60 +8,13 @@ const useSummonerData = () => {
   const [summonerData, setSummonerData] = useState(null);
   const [matches, setMatches] = useState([]);
   const [rankedData, setRankedData] = useState({ solo: null, flex: null });
-  const [liveGameData, setLiveGameData] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [championStats, setChampionStats] = useState([]);
   const [activePage, setActivePage] = useState("overview");
-  // const [refreshLiveGameTimer, setRefreshLiveGameTimer] = useState(null);
-  // const [isRefreshingLiveGame, setIsRefreshingLiveGame] = useState(false);
-
-  // useEffect(() => {
-  //   return () => {
-  //     if (refreshLiveGameTimer) {
-  //       clearInterval(refreshLiveGameTimer);
-  //     }
-  //   };
-  // }, [refreshLiveGameTimer]);
-
-  // useEffect(() => {
-  //   if (refreshLiveGameTimer) {
-  //     clearInterval(refreshLiveGameTimer);
-  //     setRefreshLiveGameTimer(null);
-  //   }
-    
-  //   if (summonerData?.id && activePage === "live") {
-  //     refreshLiveGame();
-      
-  //     const timer = setInterval(() => {
-  //       refreshLiveGame();
-  //     }, 30000);
-      
-  //     setRefreshLiveGameTimer(timer);
-      
-  //     return () => {
-  //       clearInterval(timer);
-  //     };
-  //   }
-  // }, [summonerData?.id, activePage]);
-
-  // const refreshLiveGame = async () => {
-  //   if (!summonerData?.id || isRefreshingLiveGame) return;
-    
-  //   try {
-  //     setIsRefreshingLiveGame(true);
-  //     console.log("Refreshing live game data...");
-      
-  //     const data = await fetchSummonerProfile(region, `${summonerData.gameName}#${summonerData.tagLine}`, true);
-      
-  //     console.log("Live game data received:", data.liveGameData);
-  //     setLiveGameData(data.liveGameData);
-  //   } catch (err) {
-  //     console.error("Error refreshing live game data:", err);
-  //   } finally {
-  //     setIsRefreshingLiveGame(false);
-  //   }
-  // };
+  const [liveGameData, setLiveGameData] = useState(null);
+  const [isLoadingLiveGame, setIsLoadingLiveGame] = useState(false);
+  const [liveGameError, setLiveGameError] = useState("");
 
   const handleSearch = async () => {
     if (!input.trim()) {
@@ -79,6 +33,7 @@ const useSummonerData = () => {
     setMatches([]);
     setRankedData({ solo: null, flex: null });
     setLiveGameData(null);
+    setLiveGameError("");
     setChampionStats([]);
 
     try {
@@ -87,7 +42,6 @@ const useSummonerData = () => {
       setMatches(data.matches);
       setRankedData(data.rankedData);
       setChampionStats(data.championStats);
-      setLiveGameData(data.liveGameData);
       
       setActivePage("overview");
     } catch (err) {
@@ -96,6 +50,43 @@ const useSummonerData = () => {
       setIsLoading(false);
     }
   };
+
+  const fetchLiveGameData = async () => {
+    if (!summonerData) return;
+    
+    setIsLoadingLiveGame(true);
+    setLiveGameError("");
+    setLiveGameData(null);
+    
+    try {
+      const REGION_ROUTING = {
+        "North America": { platform: "na1", routing: "americas" },
+        "Korea": { platform: "kr", routing: "asia" },
+        "Europe West": { platform: "euw1", routing: "europe" },
+      };
+      
+      const { platform } = REGION_ROUTING[summonerData.region];
+      const API_KEY = import.meta.env.VITE_RIOT_API_KEY;
+      
+      const liveData = await fetchLiveGame(platform, summonerData.puuid, API_KEY);
+      
+      if (!liveData) {
+        setLiveGameError("Player is not currently in game.");
+      } else {
+        setLiveGameData(liveData);
+      }
+    } catch (err) {
+      setLiveGameError("Failed to load live game data.");
+    } finally {
+      setIsLoadingLiveGame(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activePage === "live" && summonerData && !liveGameData && !isLoadingLiveGame) {
+      fetchLiveGameData();
+    }
+  }, [activePage, summonerData]);
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") handleSearch();
@@ -123,12 +114,13 @@ const useSummonerData = () => {
     rankedData,
     matches,
     championStats,
-    // liveGameData,
-    // refreshLiveGame,
     toggleMatchDetails,
     activePage,
     setActivePage,
-    // isRefreshingLiveGame
+    liveGameData,
+    isLoadingLiveGame,
+    liveGameError,
+    fetchLiveGameData,
   };
 };
 
