@@ -26,7 +26,6 @@ const LiveGame = ({
     );
   }
 
-  // Loading state
   if (isLoadingLiveGame) {
     return (
       <div className="container-fluid mx-auto">
@@ -100,11 +99,13 @@ const LiveGame = ({
                 <img 
                   src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(player.spell1Id)}.png`}
                   width="20px"
+                  className="mx-1"
                   alt={getSummonerSpellName(player.spell1Id)}
                 />
                 <img 
                   src={`https://ddragon.leagueoflegends.com/cdn/15.8.1/img/spell/Summoner${getSummonerSpellName(player.spell2Id)}.png`}
                   width="20px"
+                  className="mx-1"
                   alt={getSummonerSpellName(player.spell2Id)}
                 />
               </div>

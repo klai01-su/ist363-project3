@@ -157,8 +157,8 @@ const fetchSummonerProfile = async (regionCode, input) => {
       region: REGION_ROUTING[regionCode].label,
       level: summoner.summonerLevel,
       iconId: summoner.profileIconId,
-      id: summoner.id,  // Add the summoner ID to use for live game
-      puuid: puuid      // Add the PUUID for completeness
+      id: summoner.id,
+      puuid: puuid
     },
     rankedData: {
       solo: solo

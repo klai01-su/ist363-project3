@@ -108,7 +108,6 @@ const MatchCard = ({ match, toggleMatchDetails }) => {
                 <tr key={idx}>
                     <td>
                       {player.summonerName}<br />
-                      {/* <small>{player.tier} {player.rank}</small> */}
                     </td>
                     <td>
                       <img 
@@ -181,8 +180,7 @@ const MatchCard = ({ match, toggleMatchDetails }) => {
                 {match.opposingTeam.map((player, idx) => (
                 <tr key={idx}>
                     <td>
-                    {player.summonerName}<br />
-                    {/* <small>{player.tier} {player.rank}</small> */}
+                      {player.summonerName}<br />
                     </td>
                     <td>
                     <img 
