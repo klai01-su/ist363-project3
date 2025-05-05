@@ -15,6 +15,9 @@ const useSummonerData = () => {
   const [liveGameData, setLiveGameData] = useState(null);
   const [isLoadingLiveGame, setIsLoadingLiveGame] = useState(false);
   const [liveGameError, setLiveGameError] = useState("");
+  
+
+  const MIN_LOADING_TIME = 800;
 
   const handleSearch = async () => {
     if (!input.trim()) {
@@ -36,17 +39,42 @@ const useSummonerData = () => {
     setLiveGameError("");
     setChampionStats([]);
 
+    const startTime = Date.now();
+
     try {
       const data = await fetchSummonerProfile(region, input);
-      setSummonerData(data.summonerData);
-      setMatches(data.matches);
-      setRankedData(data.rankedData);
-      setChampionStats(data.championStats);
       
-      setActivePage("overview");
+      if (data && data.summonerData) {
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime < MIN_LOADING_TIME) {
+          await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsedTime));
+        }
+        
+        setSummonerData(data.summonerData);
+        setMatches(data.matches);
+        setRankedData(data.rankedData);
+        setChampionStats(data.championStats);
+        setActivePage("overview");
+      } else {
+        setError("No data found. Check Riot ID & region.");
+      }
     } catch (err) {
-      setError("Error fetching data. Check Riot ID & region.");
+      console.error("Search error:", err);
+      
+      if (err.message?.includes("not found")) {
+        setError("Summoner not found. Check Riot ID & region.");
+      } else {
+        const elapsedTime = Date.now() - startTime;
+        if (elapsedTime < MIN_LOADING_TIME) {
+          await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsedTime));
+        }
+        setError("Request Overload. Please try again in a moment.");
+      }
     } finally {
+      const elapsedTime = Date.now() - startTime;
+      if (elapsedTime < MIN_LOADING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsedTime));
+      }
       setIsLoading(false);
     }
   };
@@ -57,6 +85,8 @@ const useSummonerData = () => {
     setIsLoadingLiveGame(true);
     setLiveGameError("");
     setLiveGameData(null);
+    
+    const startTime = Date.now();
     
     try {
       const REGION_ROUTING = {
@@ -70,20 +100,37 @@ const useSummonerData = () => {
       
       const liveData = await fetchLiveGame(platform, summonerData.puuid, API_KEY);
       
+      const elapsedTime = Date.now() - startTime;
+      if (elapsedTime < MIN_LOADING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsedTime));
+      }
+      
       if (!liveData) {
         setLiveGameError("Player is not currently in game.");
       } else {
         setLiveGameData(liveData);
       }
     } catch (err) {
+      console.error("Live game error:", err);
+      
+      const elapsedTime = Date.now() - startTime;
+      if (elapsedTime < MIN_LOADING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsedTime));
+      }
+      
       setLiveGameError("Failed to load live game data.");
     } finally {
+      const elapsedTime = Date.now() - startTime;
+      if (elapsedTime < MIN_LOADING_TIME) {
+        await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsedTime));
+      }
+      
       setIsLoadingLiveGame(false);
     }
   };
 
   useEffect(() => {
-    if (activePage === "live" && summonerData && !liveGameData && !isLoadingLiveGame) {
+    if (activePage === "live" && summonerData && !liveGameData && !isLoadingLiveGame && !liveGameError) {
       fetchLiveGameData();
     }
   }, [activePage, summonerData]);

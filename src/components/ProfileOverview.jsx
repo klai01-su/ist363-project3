@@ -1,5 +1,15 @@
 import React from "react";
 import MatchCard from "./MatchCard";
+import { Pie } from "react-chartjs-2";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend
+} from "chart.js";
+
+ChartJS.register(ArcElement, Tooltip, Legend);
+
 
 const ProfileOverview = ({
   summonerData,
@@ -54,6 +64,53 @@ const ProfileOverview = ({
     );
   };
 
+  const renderWinLossPie = () => {
+    const wins = matches.filter(m => m.win).length;
+    const losses = matches.length - wins;
+    const winRate = matches.length ? ((wins / matches.length) * 100).toFixed(0) + "%" : "0%";
+  
+    const data = {
+      labels: ["Losses", "Wins"],
+      datasets: [
+        {
+          label: "Games",
+          data: [losses, wins],
+          backgroundColor: ["#d54d5a", "#587cd4"],
+          borderWidth: 1
+        }
+      ]
+    };
+  
+    const centerTextPlugin = {
+      id: 'centerText',
+      beforeDraw: (chart) => {
+        const { width, height, ctx } = chart;
+        ctx.restore();
+        const fontSize = (height / 114).toFixed(2);
+        ctx.font = `${fontSize}em sans-serif`;
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#000";
+        const text = winRate;
+        const textX = Math.round((width - ctx.measureText(text).width) / 2);
+        const textY = height / 2;
+        ctx.fillText(text, textX, textY);
+        ctx.save();
+      }
+    };
+  
+    const options = {
+      cutout: "55%",
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: true },
+        centerText: true
+      }
+    };
+  
+    return <Pie data={data} options={options} plugins={[centerTextPlugin]} />;
+  };
+  
+  
   return (
     <div className="container-fluid mx-auto">
       <div className="row justify-content-center">
@@ -68,7 +125,10 @@ const ProfileOverview = ({
             <div className="row g-0">
               <div className="col-md-6 d-flex align-items-center">
                 <div className="p-4">
-                  <div className="pie-chart-temp"></div>
+                  <div style={{ width: "100px", height: "100px" }}>
+                    {renderWinLossPie()}
+                  </div>
+
                 </div>
                 <div className="text-center">{renderRecentStats()}</div>
               </div>

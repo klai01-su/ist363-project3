@@ -46,10 +46,10 @@ const LiveGame = ({
       <div className="container-fluid mx-auto">
         <div className="row justify-content-md-center">
           <div className="col-lg-9 mb-3">
-            <div className="alert alert-warning">
+            <div className="alert alert-dark">
               {liveGameError}
               <button 
-                className="btn btn-sm btn-primary ms-3" 
+                className="btn btn-sm btn-dark ms-3" 
                 onClick={handleRefresh}
               >
                 Refresh

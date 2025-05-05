@@ -1,20 +1,20 @@
+import { fetchWithRetry } from './apiUtils';
+
 const fetchLiveGame = async (platform, puuid, API_KEY) => {
   try {
-    const response = await fetch(
+    const options = { headers: { "X-Riot-Token": API_KEY } };
+    const result = await fetchWithRetry(
       `https://${platform}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${puuid}`,
-      { headers: { "X-Riot-Token": API_KEY } }
+      options
     );
     
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error("Failed to fetch live game data");
+    if (result.notFound) {
+      return null;
     }
     
-    return await response.json();
+    return result;
   } catch (error) {
-    console.error("Error fetching live game data:", error);
+    console.error("Error fetching live game data (after retries):", error);
     return null;
   }
 };

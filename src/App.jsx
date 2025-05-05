@@ -45,7 +45,7 @@ const SummonerProfile = () => {
         />
       </div>
 
-      {error && <div className="alert alert-danger main-container">{error}</div>}
+      {error && <div className="alert alert-danger main-container mb-4">{error}</div>}
       {isLoading && (
         <div className="text-center my-5">
           <div className="spinner-border" role="status" />
